@@ -51,7 +51,7 @@ def on_message(payload):
     event = payload.get("event", {})
     channel_id, user_id, text = get_dict_info(event, USEFUL_EVENT_INFO)
 
-    if user_id == BOT_USER_ID:
+    if not user_id or user_id == BOT_USER_ID:
         return None
 
     # Increase messages counter for this user
