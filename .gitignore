@@ -1,3 +1,8 @@
+# Custom additions to base python .gitignore
+scripts/
+pyvenv.cfg
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -26,8 +31,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-scripts/
-pyvenv.cfg
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
