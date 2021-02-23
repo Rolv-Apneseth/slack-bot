@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, request, Response
 from slackeventsapi import SlackEventAdapter
 
+from assets import welcome, helper
 
 # CONSTANTS
 FILE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -25,46 +26,29 @@ BOT_USER_ID = client.api_call("auth.test")["user_id"]
 messages_counter = {}
 
 
-# HELPER FUNCTIONS
-def send_message(client, channel_id, text):
-    """Sends message of given text to a given channel_id from the given client."""
+# EVENT HANDLER FUNCTIONS
+@slack_event_adapter.on("message")
+def on_message(payload):
+    event = payload.get("event", {})
+    channel_id, user_id, text = helper.get_dict_info(event, USEFUL_EVENT_INFO)
 
-    client.chat_postMessage(channel=channel_id, text=text)
+    if not user_id or user_id == BOT_USER_ID:
+        return None
 
-
-def get_dict_info(dictionary, info_to_get):
-    """Returns list containing data from given dictionary."""
-
-    return [dictionary.get(info) for info in info_to_get]
-
-
-def increase_message_counter(user_id):
+    # Increase messages counter for this user
     if user_id in messages_counter:
         messages_counter[user_id] += 1
     else:
         messages_counter[user_id] = 1
 
 
-# EVENT HANDLER FUNCTIONS
-@slack_event_adapter.on("message")
-def on_message(payload):
-    event = payload.get("event", {})
-    channel_id, user_id, text = get_dict_info(event, USEFUL_EVENT_INFO)
-
-    if not user_id or user_id == BOT_USER_ID:
-        return None
-
-    # Increase messages counter for this user
-    increase_message_counter(user_id)
-
-
 # COMMAND FUNCTIONS
 @app.route("/messages-count", methods=["POST"])
 def messages_count():
     form_data = request.form
-    user_id, channel_id = get_dict_info(form_data, ["user_id", "channel_id"])
+    user_id, channel_id = helper.get_dict_info(form_data, ["user_id", "channel_id"])
 
-    send_message(
+    helper.send_message(
         client,
         channel_id,
         f"User {user_id} has sent {messages_counter.get(user_id, 0)} messages",
