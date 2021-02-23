@@ -10,14 +10,19 @@ from assets import welcome, helper
 FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(FILE_PATH, "assets")
 ENV_PATH = os.path.join(ASSETS_PATH, ".env")
+
 USEFUL_EVENT_INFO = ["channel", "user", "text"]
+EVENTS_PATH = "/slack/events"
+COMMANDS_ROUTES = {
+    "messages-count": "/messages-count",
+}
 
 # SETUP
 load_dotenv(dotenv_path=ENV_PATH)
 
 app = Flask(__name__)
 slack_event_adapter = SlackEventAdapter(
-    os.environ["SLACK_SIGNING_SECRET"], "/slack/events", app
+    os.environ["SLACK_SIGNING_SECRET"], EVENTS_PATH, app
 )
 
 client = slack.WebClient(token=os.environ["SLACK_API_TOKEN"])
@@ -29,9 +34,11 @@ messages_counter = {}
 # EVENT HANDLER FUNCTIONS
 @slack_event_adapter.on("message")
 def on_message(payload):
+    # Get basic info
     event = payload.get("event", {})
     channel_id, user_id, text = helper.get_dict_info(event, USEFUL_EVENT_INFO)
 
+    # Stop function if user is a bot or if no user is provided (i.e. on message update)
     if not user_id or user_id == BOT_USER_ID:
         return None
 
@@ -43,7 +50,7 @@ def on_message(payload):
 
 
 # COMMAND FUNCTIONS
-@app.route("/messages-count", methods=["POST"])
+@app.route(COMMANDS_ROUTES["messages_count"], methods=["POST"])
 def messages_count():
     form_data = request.form
     user_id, channel_id = helper.get_dict_info(form_data, ["user_id", "channel_id"])
