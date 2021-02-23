@@ -1,7 +1,7 @@
 import slack
 import os
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, request, Response
 from slackeventsapi import SlackEventAdapter
 
 
@@ -31,17 +31,29 @@ def send_message(client, channel_id, text):
     client.chat_postMessage(channel=channel_id, text=text)
 
 
-def get_event_info(event, info_to_get):
-    """Returns list containing data from given event object."""
+def get_dict_info(dictionary, info_to_get):
+    """Returns list containing data from given dictionary."""
 
-    return [event.get(info) for info in info_to_get]
+    return [dictionary.get(info) for info in info_to_get]
 
 
 # EVENT HANDLER FUNCTIONS
 @slack_event_adapter.on("message")
 def on_message(payload):
     event = payload.get("event", {})
-    channel_id, user_id, text = get_event_info(event, USEFUL_EVENT_INFO)
+    channel_id, user_id, text = get_dict_info(event, USEFUL_EVENT_INFO)
+
+    if user_id == BOT_USER_ID:
+        return None
+
+
+# COMMAND FUNCTIONS
+@app.route("/messages-count", methods=["POST"])
+def messages_count():
+    form_data = request.form
+    user_id, channel_id = get_dict_info(form_data, ["user_id", "channel_id"])
+    client.chat_postMessage(channel=channel_id, text="command registered")
+    return Response(), 200
 
 
 if __name__ == "__main__":
