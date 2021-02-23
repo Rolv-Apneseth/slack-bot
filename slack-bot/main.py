@@ -22,6 +22,7 @@ slack_event_adapter = SlackEventAdapter(
 client = slack.WebClient(token=os.environ["SLACK_API_TOKEN"])
 
 BOT_USER_ID = client.api_call("auth.test")["user_id"]
+messages_counter = {}
 
 
 # HELPER FUNCTIONS
@@ -37,6 +38,13 @@ def get_dict_info(dictionary, info_to_get):
     return [dictionary.get(info) for info in info_to_get]
 
 
+def increase_message_counter(user_id):
+    if user_id in messages_counter:
+        messages_counter[user_id] += 1
+    else:
+        messages_counter[user_id] = 1
+
+
 # EVENT HANDLER FUNCTIONS
 @slack_event_adapter.on("message")
 def on_message(payload):
@@ -46,13 +54,22 @@ def on_message(payload):
     if user_id == BOT_USER_ID:
         return None
 
+    # Increase messages counter for this user
+    increase_message_counter(user_id)
+
 
 # COMMAND FUNCTIONS
 @app.route("/messages-count", methods=["POST"])
 def messages_count():
     form_data = request.form
     user_id, channel_id = get_dict_info(form_data, ["user_id", "channel_id"])
-    client.chat_postMessage(channel=channel_id, text="command registered")
+
+    send_message(
+        client,
+        channel_id,
+        f"User {user_id} has sent {messages_counter.get(user_id, 0)} messages",
+    )
+
     return Response(), 200
 
 
