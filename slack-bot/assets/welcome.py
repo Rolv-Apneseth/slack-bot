@@ -23,15 +23,14 @@ class WelcomeMessage:
             "ts": self.timestamp,
             "channel": self.channel,
             "username": "Welcome bot",
-            "icon_emoji": self.icon_emoji,
             "blocks": [self.START_TEXT, self.DIVIDER, self._get_reaction_task()],
         }
 
     def _get_reaction_task(self):
         checkmark = ":white_check_mark:"
         if not self.is_completed:
-            checkmark = ":white_large_square"
+            checkmark = ":white_large_square:"
 
-        text = f"{checkmark} *React to this message!"
+        text = f"{checkmark} *React to this message!*"
 
         return {"type": "section", "text": {"type": "mrkdwn", "text": text}}
