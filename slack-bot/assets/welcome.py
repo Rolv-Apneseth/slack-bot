@@ -22,7 +22,6 @@ class WelcomeMessage:
         return {
             "ts": self.timestamp,
             "channel": self.channel,
-            "username": "Welcome bot",
             "blocks": [self.START_TEXT, self.DIVIDER, self._get_reaction_task()],
         }
 
