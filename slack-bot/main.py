@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, request, Response
 from slackeventsapi import SlackEventAdapter
 
-from assets import welcome, helper
+from assets import helper
 
 # CONSTANTS
 FILE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +14,7 @@ ENV_PATH = os.path.join(ASSETS_PATH, ".env")
 USEFUL_EVENT_INFO = ["channel", "user", "text"]
 EVENTS_PATH = "/slack/events"
 COMMANDS_ROUTES = {
-    "messages-count": "/messages-count",
+    "messages_count": "/messages-count",
 }
 
 # SETUP
@@ -29,6 +29,7 @@ client = slack.WebClient(token=os.environ["SLACK_API_TOKEN"])
 
 BOT_USER_ID = client.api_call("auth.test")["user_id"]
 messages_counter = {}
+welcome_messages = {}
 
 
 # EVENT HANDLER FUNCTIONS
@@ -47,6 +48,13 @@ def on_message(payload):
         messages_counter[user_id] += 1
     else:
         messages_counter[user_id] = 1
+
+    # Start message
+    if text.lower() == "start":
+        welcome_message = helper.send_welcome_message(client, f"@{user_id}", user_id)
+        if channel_id not in welcome_messages:
+            welcome_messages[channel_id] = {}
+        welcome_messages[channel_id][user_id] = welcome_message
 
 
 # COMMAND FUNCTIONS
