@@ -4,12 +4,11 @@ from dotenv import load_dotenv
 from flask import Flask, request, Response
 from slackeventsapi import SlackEventAdapter
 
-from assets import helper
+from helpers import helper
 
 # CONSTANTS
-FILE_PATH = os.path.dirname(os.path.abspath(__file__))
-ASSETS_PATH = os.path.join(FILE_PATH, "assets")
-ENV_PATH = os.path.join(ASSETS_PATH, ".env")
+FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
+ENV_PATH = os.path.join(FOLDER_PATH, ".env")
 
 USEFUL_EVENT_INFO = ["channel", "user", "text"]
 EVENTS_PATH = "/slack/events"
@@ -41,7 +40,7 @@ def on_message(payload):
 
     # Stop function if user is a bot or if no user is provided (i.e. on message update)
     if not user_id or user_id == BOT_USER_ID:
-        return None
+        return
 
     # Increase messages counter for this user
     if user_id in messages_counter:
@@ -51,10 +50,30 @@ def on_message(payload):
 
     # Start message
     if text.lower() == "start":
-        welcome_message = helper.send_welcome_message(client, f"@{user_id}", user_id)
-        if channel_id not in welcome_messages:
-            welcome_messages[channel_id] = {}
-        welcome_messages[channel_id][user_id] = welcome_message
+        welcome_message = helper.send_welcome_message(client, f"@{user_id}")
+        welcome_messages[f"@{user_id}"] = welcome_message
+
+
+@slack_event_adapter.on("reaction_added")
+def on_reaction(payload):
+    event = payload.get("event", {})
+    reacted_item = event.get("item", {})
+    channel_id = reacted_item.get("channel")
+    user_id = event.get("user")
+
+    if f"@{user_id}" not in welcome_messages:
+        return
+
+    welcome_message = welcome_messages[f"@{user_id}"]
+    welcome_message.is_completed = True
+    welcome_message.update_blocks()
+    welcome_message.to_channel = channel_id
+    welcome_messages[channel_id] = welcome_messages[f"@{user_id}"]
+    del welcome_messages[f"@{user_id}"]
+
+    message = welcome_message.get_message()
+    response = client.chat_update(**message)
+    welcome_message.timestamp = response["ts"]
 
 
 # COMMAND FUNCTIONS
@@ -74,3 +93,4 @@ def messages_count():
 
 if __name__ == "__main__":
     app.run(debug=True)
+    client.chat_postMessage
