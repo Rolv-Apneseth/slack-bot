@@ -49,7 +49,7 @@ def on_message(payload):
         messages_counter[user_id] = 1
 
     # Start message
-    if text.lower() == "start":
+    if text.lower() == "start" and f"@{user_id}" not in welcome_messages:
         welcome_message = helper.send_welcome_message(client, f"@{user_id}")
         welcome_messages[f"@{user_id}"] = welcome_message
 
