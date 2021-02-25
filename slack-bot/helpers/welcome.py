@@ -1,4 +1,7 @@
-class WelcomeMessage:
+from helpers.message import Message
+
+
+class WelcomeMessage(Message):
     START_TEXT = {
         "type": "section",
         "text": {
@@ -11,21 +14,18 @@ class WelcomeMessage:
 
     DIVIDER = {"type": "divider"}
 
-    def __init__(self, channel, user_id):
-        self.channel = channel
-        self.user_id = user_id
-        self.icon_emoji = ":robot_face:"
-        self.timestamp = ""
-        self.is_completed = False
+    def __init__(self, to_channel):
+        super().__init__(to_channel)
+        self.update_blocks()
 
-    def get_message(self):
-        return {
-            "ts": self.timestamp,
-            "channel": self.channel,
-            "blocks": [self.START_TEXT, self.DIVIDER, self._get_reaction_task()],
-        }
+    def update_blocks(self):
+        """Sets blocks to be shown on message."""
+
+        self.blocks = [self.START_TEXT, self.DIVIDER, self._get_reaction_task()]
 
     def _get_reaction_task(self):
+        """Gets dictionary for reaction block of welcome message."""
+
         checkmark = ":white_check_mark:"
         if not self.is_completed:
             checkmark = ":white_large_square:"

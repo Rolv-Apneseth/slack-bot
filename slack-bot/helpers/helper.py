@@ -1,4 +1,4 @@
-from assets import welcome
+from helpers import welcome
 
 
 # HELPER FUNCTIONS
@@ -20,13 +20,13 @@ def get_dict_info(dictionary, info_to_get):
     return [dictionary.get(info) for info in info_to_get]
 
 
-def send_welcome_message(client, channel_id, user_id):
+def send_welcome_message(client, channel_id):
     """
     Sends welcome message to a given channel.
 
     Returns a WelcomeMessage object.
     """
-    welcome_message = welcome.WelcomeMessage(channel_id, user_id)
+    welcome_message = welcome.WelcomeMessage(channel_id)
     message = welcome_message.get_message()
     response = client.chat_postMessage(**message)
     welcome_message.timestamp = response["ts"]
