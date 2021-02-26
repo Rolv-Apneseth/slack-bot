@@ -14,6 +14,16 @@ def send_message(client, channel_id, text):
     client.chat_postMessage(channel=channel_id, text=text)
 
 
+def reply_message(client, channel_id, ts, text):
+    """Replies to a message on the given channel_id in a thread."""
+
+    client.chat_postMessage(
+        channel=channel_id,
+        thread_ts=ts,
+        text=text,
+    )
+
+
 def get_dict_info(dictionary, info_to_get):
     """Returns list containing data from given dictionary."""
 
