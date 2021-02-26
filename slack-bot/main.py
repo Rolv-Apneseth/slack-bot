@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from flask import Flask, request, Response
 from slackeventsapi import SlackEventAdapter
+import profanity_check
 
 from helpers import helper
 
@@ -10,11 +11,13 @@ from helpers import helper
 FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(FOLDER_PATH, ".env")
 
-USEFUL_EVENT_INFO = ["channel", "user", "text"]
+USEFUL_EVENT_INFO = ["channel", "user", "text", "ts"]
 EVENTS_PATH = "/slack/events"
 COMMANDS_ROUTES = {
     "messages_count": "/messages-count",
 }
+
+PROFANITY_RESPONSE = "Please do not include profanity in your messages!"
 
 # SETUP
 load_dotenv(dotenv_path=ENV_PATH)
@@ -36,7 +39,7 @@ welcome_messages = {}
 def on_message(payload):
     # Get basic info
     event = payload.get("event", {})
-    channel_id, user_id, text = helper.get_dict_info(event, USEFUL_EVENT_INFO)
+    channel_id, user_id, text, ts = helper.get_dict_info(event, USEFUL_EVENT_INFO)
 
     # Stop function if user is a bot or if no user is provided (i.e. on message update)
     if not user_id or user_id == BOT_USER_ID:
@@ -52,6 +55,9 @@ def on_message(payload):
     if text.lower() == "start" and f"@{user_id}" not in welcome_messages:
         welcome_message = helper.send_welcome_message(client, f"@{user_id}")
         welcome_messages[f"@{user_id}"] = welcome_message
+    # Profanity response
+    elif profanity_check.predict([text.lower()])[0]:
+        helper.reply_message(client, channel_id, ts, PROFANITY_RESPONSE)
 
 
 @slack_event_adapter.on("reaction_added")
