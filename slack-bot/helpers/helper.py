@@ -24,6 +24,12 @@ def reply_message(client, channel_id, ts, text):
     )
 
 
+def schedule_message(client, channel, text, ts):
+    """Schedule a message to be posted to the given channel."""
+
+    client.chat_scheduleMessage(channel=channel, text=text, post_at=ts)
+
+
 def get_dict_info(dictionary, info_to_get):
     """Returns list containing data from given dictionary."""
 
