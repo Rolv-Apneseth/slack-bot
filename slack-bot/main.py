@@ -15,6 +15,7 @@ USEFUL_EVENT_INFO = ["channel", "user", "text", "ts"]
 EVENTS_PATH = "/slack/events"
 COMMANDS_ROUTES = {
     "messages_count": "/messages-count",
+    "reminder_mins": "/reminder-mins",
 }
 
 PROFANITY_RESPONSE = "Please do not include profanity in your messages!"
@@ -97,6 +98,33 @@ def messages_count():
     return Response(), 200
 
 
+@app.route(COMMANDS_ROUTES["reminder_mins"], methods=["POST"])
+def reminder_minutes():
+    form_data = request.form
+    user_id, text = helper.get_dict_info(form_data, ["user_id", "text"])
+    dm_channel = f"@{user_id}"
+
+    if helper.verify_number(text):
+        helper.schedule_message(
+            client,
+            dm_channel,
+            f"{text} minute(s) have passed!",
+            helper.get_timestamp(minutes=int(text)),
+        )
+        helper.send_message(client, dm_channel, f"Reminder set for {text} minute(s)")
+    else:
+        helper.send_message(
+            client,
+            dm_channel,
+            (
+                "Your command failed to load. "
+                "Please provide a positive whole number for the minutes argument. "
+                f"Argument you provided: '{text}'"
+            ),
+        )
+
+    return Response(), 200
+
+
 if __name__ == "__main__":
     app.run(debug=True)
-    client.chat_postMessage
