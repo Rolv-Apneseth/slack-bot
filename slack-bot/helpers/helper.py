@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from helpers import welcome
 
 
@@ -24,6 +26,17 @@ def reply_message(client, channel_id, ts, text):
     )
 
 
+def get_timestamp(seconds=0, minutes=0, hours=0, days=0):
+    """
+    Returns a timestamp for a given time in the future provided in keyword arguments.
+    """
+    MINIMUM = timedelta(seconds=14)
+    delta = timedelta(seconds=0, minutes=0, hours=0, days=0)
+    delta = delta if delta > MINIMUM else MINIMUM
+
+    return (datetime.now() + delta).timestamp()
+
+
 def schedule_message(client, channel, text, ts):
     """Schedule a message to be posted to the given channel."""
 
@@ -48,3 +61,14 @@ def send_welcome_message(client, channel_id):
     welcome_message.timestamp = response["ts"]
 
     return welcome_message
+
+
+def verify_number(string):
+    """Returns a boolean value on whether a given string is a positive integer."""
+
+    try:
+        integer = int(string)
+        assert integer > 0
+    except (ValueError, AssertionError):
+        return False
+    return True
